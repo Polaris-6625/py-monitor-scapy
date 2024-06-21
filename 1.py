@@ -19,35 +19,58 @@ stop_sniffing = False
 
 
 def handle_packet(packet):
+    """
+    处理数据包，统计不同类型数据包数量。
+
+    Args:
+        packet: 捕获到的数据包，类型为scapy.Packet。
+
+    Returns:
+        None。
+
+    """
+    # 如果停止嗅探，则返回
     if stop_sniffing:
         return
 
+    # 如果数据包包含Ethernet层
     if packet.haslayer(Ether):
+        # 获取目标MAC地址
         dst_mac = packet[Ether].dst
+        # 如果目标MAC地址为广播地址
         if dst_mac == "ff:ff:ff:ff:ff:ff":
+            # 广播数据包数量加1
             stats['broadcast'] += 1
+        # 如果目标MAC地址以"01:00:5e"或"33:33"开头
         elif dst_mac.startswith("01:00:5e") or dst_mac.startswith("33:33"):
+            # 组播数据包数量加1
             stats['multicast'] += 1
 
+    # 如果数据包包含IP层
     if packet.haslayer(IP):
+        # 获取源IP地址
         src_ip = packet[IP].src
+        # 获取目标IP地址
         dst_ip = packet[IP].dst
+        # 如果源IP地址或目标IP地址等于本地IP地址
         if src_ip == LOCAL_IP or dst_ip == LOCAL_IP:
+            # 本地数据包数量加1
             stats['local'] += 1
 
+    # 接收到的数据包数量加1
     stats['received'] += 1
 
 
 def update_stats():
     global stats_labels
-    stats_labels['multicast'].config(text=f"Multicast Packets: {stats['multicast']}")
-    stats_labels['broadcast'].config(text=f"Broadcast Packets: {stats['broadcast']}")
-    stats_labels['local'].config(text=f"Local Packets: {stats['local']}")
-    stats_labels['received'].config(text=f"Received Packets: {stats['received']}")
+    stats_labels['multicast'].config(text=f"多播包: {stats['multicast']}")
+    stats_labels['broadcast'].config(text=f"广播包: {stats['broadcast']}")
+    stats_labels['local'].config(text=f"本地: {stats['local']}")
+    stats_labels['received'].config(text=f"接收: {stats['received']}")
 
     net_io_counters = psutil.net_io_counters(pernic=True)['en0']
     dropped_packets = net_io_counters.dropout + net_io_counters.dropin
-    stats_labels['dropped'].config(text=f"Dropped Packets: {dropped_packets}")
+    stats_labels['dropped'].config(text=f"丢失: {dropped_packets}")
     
     if not stop_sniffing:
         root.after(1000, update_stats)  # 如果没有停止，每秒刷新一次统计数据
@@ -89,11 +112,11 @@ ip_entry.pack()
 
 
 stats_labels = {
-    'multicast': tk.Label(root, text="Multicast Packets: 0"),
-    'broadcast': tk.Label(root, text="Broadcast Packets: 0"),
-    'local': tk.Label(root, text="Local Packets: 0"),
-    'received': tk.Label(root, text="Received Packets: 0"),
-    'dropped': tk.Label(root, text="Dropped Packets: 0")
+    'multicast': tk.Label(root, text="多播包: 0"),
+    'broadcast': tk.Label(root, text="广播包: 0"),
+    'local': tk.Label(root, text="本地: 0"),
+    'received': tk.Label(root, text="接收: 0"),
+    'dropped': tk.Label(root, text="丢失: 0")
 }
 
 
