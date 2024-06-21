@@ -1,6 +1,7 @@
 from scapy.all import sniff, Ether, IP
 import tkinter as tk
 from threading import Thread
+import logging
 import psutil
 
 
@@ -101,7 +102,7 @@ def init_interface():
 
 
 root = tk.Tk()
-root.title("Network Traffic Monitor")
+root.title("网络流量统计软件")
 
 
 ip_label = tk.Label(root, text="本地IP地址:")
